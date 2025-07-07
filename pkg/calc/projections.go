@@ -333,13 +333,13 @@ func (c *Calculator) calculateHealthInsurance(age int) float64 {
 }
 
 // calculateLifeInsurance calculates life insurance premiums
-func (c *Calculator) calculateLifeInsurance(age int) float64 {
+func (c *Calculator) calculateLifeInsurance(_ int) float64 {
 	// Simplified FEGLI premium estimate
 	return 600.0 // $50/month
 }
 
 // calculateCOLA calculates Cost of Living Adjustment
-func (c *Calculator) calculateCOLA(currentAge, startAge int) float64 {
+func (c *Calculator) calculateCOLA(_, _ int) float64 {
 	// Simplified COLA calculation
 	return 0.025 // 2.5% average
 }

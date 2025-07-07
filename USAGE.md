@@ -5,6 +5,7 @@
 ### Global Flags
 - `--config string`: Config file (default: $HOME/.ferex.yaml)
 - `--format string`: Output format (table, json, csv, yaml) (default: "table")
+- `--monthly`: Display monthly breakdown for budgeting
 - `--verbose`: Verbose output
 - `--help`: Show help
 
@@ -52,6 +53,7 @@ Calculate retirement projections.
 
 **Flags:**
 - `--output string`: Output file (default: stdout)
+- `--monthly`: Display monthly breakdown for budgeting
 
 **Examples:**
 ```bash
@@ -60,6 +62,9 @@ ferex calc my-plan.yaml
 
 # Save to CSV file
 ferex calc my-plan.yaml --format csv --output results.csv
+
+# Monthly breakdown for budgeting
+ferex calc my-plan.yaml --monthly
 
 # Verbose output with detailed projections
 ferex calc my-plan.yaml --verbose
@@ -130,11 +135,11 @@ retirement:
 #### TSP Information
 ```yaml
 tsp:
-  current_balance: 500000             # Total TSP balance
   traditional_balance: 400000         # Traditional TSP balance
   roth_balance: 100000               # Roth TSP balance
-  withdrawal_strategy: "life_expectancy"  # "fixed_amount", "life_expectancy", "lump_sum"
-  withdrawal_amount: 0               # For fixed_amount strategy
+  withdrawal_strategy: "percentage"    # "fixed_amount", "life_expectancy", "percentage", "lump_sum"
+  withdrawal_amount: 0               # For fixed_amount strategy (annual amount)
+  withdrawal_rate: 0.04              # For percentage strategy (e.g., 4% rule)
   growth_rate: 0.07                  # Annual growth rate assumption
 ```
 
@@ -143,12 +148,32 @@ tsp:
 social_security:
   estimated_pia: 2800                # Primary Insurance Amount from SSA
   claiming_age: 67                   # Age when you'll claim SS benefits
+  monthly_estimates:                 # Monthly estimates from SSA statement
+    62: 2240                        # Monthly benefit at age 62
+    67: 2800                        # Monthly benefit at full retirement age
+    70: 3472                        # Monthly benefit at age 70
   spouse_benefit:                    # Spouse information (optional)
     estimated_pia: 2200
     claiming_age: 67
 ```
 
 ### Optional Sections
+
+#### Health Insurance
+```yaml
+health_insurance:
+  retirement_premium: 4800           # Annual premium in retirement
+  premium_cola: 0.03                # Annual premium increase rate
+  plan: "Blue Cross Standard"        # Plan name for reference
+```
+
+#### Tax Information
+```yaml
+tax_info:
+  state: "FL"                       # State abbreviation for tax calculations
+  state_tax_rate: 0.0               # Override state tax rate (optional)
+  filing_status: "mfj"              # "single", "mfj" (married filing jointly)
+```
 
 #### Output Preferences
 ```yaml
@@ -183,8 +208,16 @@ employment:
 Each row represents one year of retirement with:
 - **Income Sources**: Pension, FERS Supplement, Social Security, TSP withdrawals
 - **Taxes**: Federal and state income tax estimates
+- **Health Insurance**: Premium costs with COLA adjustments
 - **Net Income**: Take-home pay after taxes and deductions
 - **TSP Balance**: Account balance progression
+
+### Monthly Breakdown (--monthly flag)
+When using the `--monthly` flag, the output shows:
+- Monthly income amounts for budgeting
+- Monthly tax withholdings
+- Monthly health insurance premiums
+- Monthly net income for household planning
 
 ### Comparison Analysis
 Side-by-side comparison of different retirement ages showing:
@@ -272,9 +305,43 @@ Then create charts in Excel/Sheets for:
 
 ## Troubleshooting
 
+### TSP Withdrawal Strategies
+1. **Fixed Amount**: Withdraw a specific dollar amount annually
+   ```yaml
+   withdrawal_strategy: "fixed_amount"
+   withdrawal_amount: 30000
+   ```
+
+2. **Life Expectancy**: Use IRS life expectancy tables
+   ```yaml
+   withdrawal_strategy: "life_expectancy"
+   ```
+
+3. **Percentage**: Withdraw a percentage of balance each year (e.g., 4% rule)
+   ```yaml
+   withdrawal_strategy: "percentage"
+   withdrawal_rate: 0.04
+   ```
+
+4. **Lump Sum**: Single withdrawal at retirement
+   ```yaml
+   withdrawal_strategy: "lump_sum"
+   ```
+
+### State Tax Support
+Currently supported states with specific tax rules:
+- **FL**: No state income tax
+- **TX**: No state income tax
+- **CA**: Progressive tax rates with retirement income exemptions
+- **NY**: Progressive tax rates with pension exemptions
+- **VA**: Retirement income exemptions
+- **MD**: Retirement income exemptions
+- **PA**: No tax on retirement income
+- **Other states**: Uses generic state tax rate if specified
+
 ### Common Validation Errors
 - **"FERS eligibility not met"**: Check age and service requirements
-- **"TSP balance inconsistency"**: Ensure traditional + roth = current balance
+- **"TSP withdrawal strategy validation failed"**: Ensure required fields are set for chosen strategy
 - **"Birth date must be before hire date"**: Verify date formats
 
 ### Getting Help
