@@ -68,7 +68,7 @@ func (c *Calculator) calculateLifetimeIncome(projections []models.AnnualProjecti
 
 // calculateReplacementRatio calculates income replacement ratio
 func (c *Calculator) calculateReplacementRatio(firstYear models.AnnualProjection) float64 {
-	preRetirementIncome := c.config.Employment.CurrentSalary
+	preRetirementIncome := c.config.Employment.High3Salary
 	return firstYear.NetIncome / preRetirementIncome
 }
 
@@ -94,12 +94,12 @@ func (c *Calculator) generateWarnings() []string {
 	// Note: TSP balance is now calculated as traditional + roth
 
 	// Check if High-3 seems low
-	if c.config.Employment.High3Salary < c.config.Employment.CurrentSalary*0.9 {
-		warnings = append(warnings, "High-3 salary appears significantly lower than current salary")
+	if c.config.Employment.High3Salary < 50000 {
+		warnings = append(warnings, "High-3 salary appears to be quite low")
 	}
 
 	// Check early retirement
-	if c.config.Retirement.TargetAge < 62 {
+	if c.calculateAgeAtRetirement() < 62 {
 		warnings = append(warnings, "Early retirement will result in reduced pension benefits")
 	}
 
@@ -108,7 +108,7 @@ func (c *Calculator) generateWarnings() []string {
 
 // checkRetirementEligibility performs basic eligibility check
 func (c *Calculator) checkRetirementEligibility() bool {
-	age := c.config.Retirement.TargetAge
+	age := c.calculateAgeAtRetirement()
 	service := c.config.Employment.CreditableService.TotalYears
 
 	if c.config.Personal.RetirementSystem == "FERS" {
@@ -152,9 +152,15 @@ func CompareRetirementAges(baseConfig *models.Config, ageStrings []string) (*mod
 			return nil, err
 		}
 		
-		// Create a copy of the config with modified retirement age
+		// Create a copy of the config with modified retirement date
 		configCopy := *baseConfig
-		configCopy.Retirement.TargetAge = age
+		
+		// Calculate new retirement date based on age
+		birthYear := configCopy.Personal.BirthDate.Year()
+		retirementYear := birthYear + age
+		configCopy.Retirement.TargetRetirementDate = time.Date(retirementYear, 
+			configCopy.Personal.BirthDate.Month(), 
+			configCopy.Personal.BirthDate.Day(), 0, 0, 0, 0, time.UTC)
 		
 		// Calculate results for this age
 		calc := NewCalculator(&configCopy)

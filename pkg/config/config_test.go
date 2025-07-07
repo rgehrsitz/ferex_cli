@@ -98,7 +98,7 @@ func TestFERSEligibilityValidation(t *testing.T) {
 	}
 	
 	// Test invalid eligibility (too young, not enough service)
-	cfg.Retirement.TargetAge = 55
+	cfg.Retirement.TargetRetirementDate = time.Date(2022, 3, 15, 0, 0, 0, 0, time.UTC) // Age 55
 	cfg.Employment.CreditableService.TotalYears = 5
 	err = validateFERSEligibility(cfg)
 	if err == nil {
@@ -106,7 +106,7 @@ func TestFERSEligibilityValidation(t *testing.T) {
 	}
 	
 	// Test MRA+30 eligibility
-	cfg.Retirement.TargetAge = 57 // MRA for 1967 birth year
+	cfg.Retirement.TargetRetirementDate = time.Date(2024, 3, 15, 0, 0, 0, 0, time.UTC) // Age 57 (MRA for 1967 birth year)
 	cfg.Employment.CreditableService.TotalYears = 30
 	err = validateFERSEligibility(cfg)
 	if err != nil {
@@ -139,8 +139,7 @@ func TestFillCalculatedFields(t *testing.T) {
 	cfg := generateBasicTemplate()
 	
 	// Clear calculated fields
-	cfg.Personal.CurrentAge = 0
-	cfg.Employment.High3Salary = 0
+	cfg.Employment.CreditableService.TotalYears = 0
 	cfg.TSP.GrowthRate = 0
 	
 	err := fillCalculatedFields(cfg)
@@ -149,12 +148,8 @@ func TestFillCalculatedFields(t *testing.T) {
 	}
 	
 	// Check fields were filled
-	if cfg.Personal.CurrentAge == 0 {
-		t.Error("Current age was not calculated")
-	}
-	
-	if cfg.Employment.High3Salary != cfg.Employment.CurrentSalary {
-		t.Error("High-3 salary was not set to current salary")
+	if cfg.Employment.CreditableService.TotalYears == 0 {
+		t.Error("Total service years were not calculated")
 	}
 	
 	if cfg.TSP.GrowthRate != 0.07 {

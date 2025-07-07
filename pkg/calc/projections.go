@@ -11,14 +11,15 @@ import (
 func (c *Calculator) generateAnnualProjections(pension models.PensionCalculation, ss models.SocialSecurityCalculation, fersup models.FERSSupplementCalculation) ([]models.AnnualProjection, error) {
 	var projections []models.AnnualProjection
 	
-	startAge := c.config.Retirement.TargetAge
+	startAge := c.calculateAgeAtRetirement()
 	endAge := 95 // Project to age 95
 	
 	// Initialize TSP balance (traditional + roth)
 	tspBalance := c.config.TSP.TraditionalBalance + c.config.TSP.RothBalance
 	
 	for age := startAge; age <= endAge; age++ {
-		year := time.Now().Year() + (age - c.config.Personal.CurrentAge)
+		currentAge := time.Now().Year() - c.config.Personal.BirthDate.Year()
+		year := time.Now().Year() + (age - currentAge)
 		
 		projection := models.AnnualProjection{
 			Year:             year,
@@ -155,7 +156,7 @@ func (c *Calculator) calculateTSPWithdrawal(balance float64, age int) float64 {
 		
 	case "lump_sum":
 		// Take everything at retirement
-		if age == c.config.Retirement.TargetAge {
+		if age == c.calculateAgeAtRetirement() {
 			return balance
 		}
 		return 0
@@ -305,7 +306,7 @@ func (c *Calculator) calculateStateTax(projection models.AnnualProjection, age i
 
 // calculateHealthInsurance calculates health insurance premiums
 func (c *Calculator) calculateHealthInsurance(age int) float64 {
-	startAge := c.config.Retirement.TargetAge
+	startAge := c.calculateAgeAtRetirement()
 	yearsRetired := age - startAge
 	
 	// Use configured premiums if available

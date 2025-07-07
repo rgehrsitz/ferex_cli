@@ -13,12 +13,10 @@ func createTestConfig() *models.Config {
 		Personal: models.PersonalInfo{
 			Name:             "Test User",
 			BirthDate:        time.Date(1967, 3, 15, 0, 0, 0, 0, time.UTC),
-			CurrentAge:       57,
 			RetirementSystem: "FERS",
 		},
 		Employment: models.EmploymentInfo{
 			HireDate:      time.Date(1999, 1, 15, 0, 0, 0, 0, time.UTC),
-			CurrentSalary: 85000,
 			High3Salary:   82000,
 			CreditableService: models.CreditableService{
 				TotalYears:      25,
@@ -28,7 +26,7 @@ func createTestConfig() *models.Config {
 			},
 		},
 		Retirement: models.RetirementInfo{
-			TargetAge:       62,
+			TargetRetirementDate: time.Date(2029, 3, 15, 0, 0, 0, 0, time.UTC), // Age 62
 			SurvivorBenefit: "full",
 			EarlyRetirement: nil,
 		},
@@ -76,7 +74,7 @@ func TestFERSPensionCalculation(t *testing.T) {
 
 func TestFERSEarlyRetirementReduction(t *testing.T) {
 	config := createTestConfig()
-	config.Retirement.TargetAge = 57 // Early retirement at MRA
+	config.Retirement.TargetRetirementDate = time.Date(2024, 3, 15, 0, 0, 0, 0, time.UTC) // Age 57 (early retirement at MRA)
 	config.Employment.CreditableService.TotalYears = 15 // Only 15 years, triggering MRA+10 reduction
 	
 	calc := NewCalculator(config)

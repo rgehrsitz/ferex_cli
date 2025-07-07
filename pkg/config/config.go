@@ -84,15 +84,11 @@ func GenerateTemplate(templateType string) (*models.Config, error) {
 
 // fillCalculatedFields fills in calculated fields that may be missing
 func fillCalculatedFields(config *models.Config) error {
-	// Calculate current age if not provided
-	if config.Personal.CurrentAge == 0 {
-		age := calculateAge(config.Personal.BirthDate)
-		config.Personal.CurrentAge = age
-	}
-
-	// Calculate High-3 salary if not provided (use current salary as estimate)
-	if config.Employment.High3Salary == 0 {
-		config.Employment.High3Salary = config.Employment.CurrentSalary
+	// Calculate total years of service if not provided
+	if config.Employment.CreditableService.TotalYears == 0 {
+		// Calculate from hire date to target retirement date
+		serviceYears := calculateServiceYears(config.Employment.HireDate, config.Retirement.TargetRetirementDate)
+		config.Employment.CreditableService.TotalYears = serviceYears
 	}
 
 	// Set default TSP growth rate if not provided
@@ -142,13 +138,17 @@ func validateBusinessRules(config *models.Config) error {
 	if config.Personal.BirthDate.After(config.Employment.HireDate) {
 		return fmt.Errorf("birth date must be before hire date")
 	}
+	
+	if config.Retirement.TargetRetirementDate.Before(config.Employment.HireDate) {
+		return fmt.Errorf("retirement date must be after hire date")
+	}
 
 	return nil
 }
 
 // validateFERSEligibility validates FERS retirement eligibility
 func validateFERSEligibility(config *models.Config) error {
-	age := config.Retirement.TargetAge
+	age := calculateAgeAtDate(config.Personal.BirthDate, config.Retirement.TargetRetirementDate)
 	service := config.Employment.CreditableService.TotalYears
 
 	// Check basic eligibility scenarios
@@ -210,6 +210,26 @@ func calculateAge(birthDate time.Time) int {
 	}
 	
 	return age
+}
+
+// calculateServiceYears calculates years of service between hire and retirement dates
+func calculateServiceYears(hireDate, retirementDate time.Time) float64 {
+	duration := retirementDate.Sub(hireDate)
+	years := duration.Hours() / (24 * 365.25) // Account for leap years
+	return years
+}
+
+// calculateAgeAtDate calculates age at a specific date
+func calculateAgeAtDate(birthDate, targetDate time.Time) int {
+	years := targetDate.Year() - birthDate.Year()
+	
+	// Adjust if birthday hasn't occurred by target date
+	if targetDate.Month() < birthDate.Month() || 
+		(targetDate.Month() == birthDate.Month() && targetDate.Day() < birthDate.Day()) {
+		years--
+	}
+	
+	return years
 }
 
 // interactiveValidationFix attempts to fix validation issues interactively

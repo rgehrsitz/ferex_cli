@@ -54,7 +54,7 @@ func (c *Calculator) Calculate() (*models.RetirementResults, error) {
 func (c *Calculator) calculatePension() (models.PensionCalculation, error) {
 	service := c.config.Employment.CreditableService.TotalYears
 	high3 := c.config.Employment.High3Salary
-	age := c.config.Retirement.TargetAge
+	age := c.calculateAgeAtRetirement()
 
 	var basePension float64
 	var reductionPct float64
@@ -224,6 +224,28 @@ func (c *Calculator) calculateMRA() int {
 	}
 }
 
+// calculateAgeAtRetirement calculates age at retirement date
+func (c *Calculator) calculateAgeAtRetirement() int {
+	birthYear := c.config.Personal.BirthDate.Year()
+	retirementYear := c.config.Retirement.TargetRetirementDate.Year()
+	
+	// More precise calculation considering month and day
+	birthMonth := c.config.Personal.BirthDate.Month()
+	birthDay := c.config.Personal.BirthDate.Day()
+	retirementMonth := c.config.Retirement.TargetRetirementDate.Month()
+	retirementDay := c.config.Retirement.TargetRetirementDate.Day()
+	
+	age := retirementYear - birthYear
+	
+	// Adjust if birthday hasn't occurred by retirement date
+	if retirementMonth < birthMonth || 
+		(retirementMonth == birthMonth && retirementDay < birthDay) {
+		age--
+	}
+	
+	return age
+}
+
 // calculateSocialSecurity calculates Social Security benefits
 func (c *Calculator) calculateSocialSecurity() models.SocialSecurityCalculation {
 	pia := c.config.SocialSecurity.EstimatedPIA
@@ -282,7 +304,7 @@ func (c *Calculator) calculateSSClaimingAdjustment(claimingAge int) float64 {
 // calculateFERSSupplement calculates FERS Supplement if applicable
 func (c *Calculator) calculateFERSSupplement() models.FERSSupplementCalculation {
 	// Only for FERS retirees under 62
-	if c.config.Personal.RetirementSystem != "FERS" || c.config.Retirement.TargetAge >= 62 {
+	if c.config.Personal.RetirementSystem != "FERS" || c.calculateAgeAtRetirement() >= 62 {
 		return models.FERSSupplementCalculation{
 			Eligible: false,
 		}
@@ -290,7 +312,7 @@ func (c *Calculator) calculateFERSSupplement() models.FERSSupplementCalculation 
 	
 	// Check eligibility (simplified)
 	service := c.config.Employment.CreditableService.TotalYears
-	age := c.config.Retirement.TargetAge
+	age := c.calculateAgeAtRetirement()
 	mra := c.calculateMRA()
 	
 	eligible := false

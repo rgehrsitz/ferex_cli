@@ -11,12 +11,10 @@ func generateBasicTemplate() *models.Config {
 		Personal: models.PersonalInfo{
 			Name:             "John Doe",
 			BirthDate:        time.Date(1967, 3, 15, 0, 0, 0, 0, time.UTC),
-			CurrentAge:       57,
 			RetirementSystem: "FERS",
 		},
 		Employment: models.EmploymentInfo{
 			HireDate:      time.Date(1999, 1, 15, 0, 0, 0, 0, time.UTC),
-			CurrentSalary: 85000,
 			High3Salary:   82000,
 			CreditableService: models.CreditableService{
 				TotalYears:      25,
@@ -26,7 +24,7 @@ func generateBasicTemplate() *models.Config {
 			},
 		},
 		Retirement: models.RetirementInfo{
-			TargetAge:       62,
+			TargetRetirementDate: time.Date(2029, 3, 15, 0, 0, 0, 0, time.UTC), // Age 62
 			SurvivorBenefit: "full",
 			EarlyRetirement: nil,
 		},
@@ -97,12 +95,10 @@ func generateAdvancedTemplate() *models.Config {
 		Personal: models.PersonalInfo{
 			Name:             "Jane Smith",
 			BirthDate:        time.Date(1965, 7, 22, 0, 0, 0, 0, time.UTC),
-			CurrentAge:       59,
 			RetirementSystem: "FERS",
 		},
 		Employment: models.EmploymentInfo{
 			HireDate:      time.Date(1995, 6, 1, 0, 0, 0, 0, time.UTC),
-			CurrentSalary: 95000,
 			High3Salary:   92000,
 			CreditableService: models.CreditableService{
 				TotalYears:      29,
@@ -112,7 +108,7 @@ func generateAdvancedTemplate() *models.Config {
 			},
 		},
 		Retirement: models.RetirementInfo{
-			TargetAge:       56, // Early retirement at MRA
+			TargetRetirementDate: time.Date(2021, 7, 22, 0, 0, 0, 0, time.UTC), // Age 56 (early retirement)
 			SurvivorBenefit: "partial",
 			EarlyRetirement: earlyRetirement,
 		},
@@ -160,12 +156,10 @@ func generateCSRSTemplate() *models.Config {
 		Personal: models.PersonalInfo{
 			Name:             "Robert Johnson",
 			BirthDate:        time.Date(1958, 11, 3, 0, 0, 0, 0, time.UTC),
-			CurrentAge:       66,
 			RetirementSystem: "CSRS",
 		},
 		Employment: models.EmploymentInfo{
 			HireDate:      time.Date(1982, 9, 15, 0, 0, 0, 0, time.UTC),
-			CurrentSalary: 105000,
 			High3Salary:   102000,
 			CreditableService: models.CreditableService{
 				TotalYears:      42,
@@ -178,7 +172,7 @@ func generateCSRSTemplate() *models.Config {
 			},
 		},
 		Retirement: models.RetirementInfo{
-			TargetAge:       66,
+			TargetRetirementDate: time.Date(2024, 11, 3, 0, 0, 0, 0, time.UTC), // Age 66
 			SurvivorBenefit: "full",
 			EarlyRetirement: nil,
 		},

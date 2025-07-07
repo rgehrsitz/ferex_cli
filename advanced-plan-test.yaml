@@ -1,0 +1,51 @@
+personal:
+    name: Jane Smith
+    birth_date: 1965-07-22T00:00:00Z
+    current_age: 59
+    retirement_system: FERS
+employment:
+    hire_date: 1995-06-01T00:00:00Z
+    current_salary: 95000
+    high_3_salary: 92000
+    creditable_service:
+        total_years: 29
+        part_time_periods:
+            - start_date: 2010-01-01T00:00:00Z
+              end_date: 2012-12-31T00:00:00Z
+              hours_per_week: 32
+        military_service:
+            years: 4
+            bought_back: true
+        unused_sick_leave: 240
+retirement:
+    target_age: 56
+    survivor_benefit: partial
+    early_retirement:
+        type: MRA+10
+tsp:
+    traditional_balance: 550000
+    roth_balance: 200000
+    withdrawal_strategy: fixed_amount
+    withdrawal_amount: 30000
+    growth_rate: 0.08
+social_security:
+    estimated_pia: 3200
+    claiming_age: 67
+    spouse_benefit:
+        estimated_pia: 2200
+        claiming_age: 67
+    monthly_estimates:
+        62: 2560
+        67: 3200
+        70: 3968
+health_insurance:
+    retirement_premium: 6000
+    premium_cola: 0.035
+    plan: Blue Cross High Option
+tax_info:
+    state: FL
+    filing_status: mfj
+output:
+    format: csv
+    verbose: true
+    output_file: retirement-analysis.csv

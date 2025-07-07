@@ -20,21 +20,19 @@ type Config struct {
 type PersonalInfo struct {
 	Name           string    `yaml:"name" validate:"required"`
 	BirthDate      time.Time `yaml:"birth_date" validate:"required"`
-	CurrentAge     int       `yaml:"current_age" validate:"required,min=18,max=100"`
 	RetirementSystem string  `yaml:"retirement_system" validate:"required,oneof=FERS CSRS"`
 }
 
 // EmploymentInfo contains federal employment details
 type EmploymentInfo struct {
 	HireDate        time.Time `yaml:"hire_date" validate:"required"`
-	CurrentSalary   float64   `yaml:"current_salary" validate:"required,gt=0"`
-	High3Salary     float64   `yaml:"high_3_salary,omitempty" validate:"omitempty,gt=0"`
+	High3Salary     float64   `yaml:"high_3_salary" validate:"required,gt=0"`
 	CreditableService CreditableService `yaml:"creditable_service" validate:"required"`
 }
 
 // CreditableService represents service time calculations
 type CreditableService struct {
-	TotalYears      float64           `yaml:"total_years" validate:"required,gt=0"`
+	TotalYears      float64           `yaml:"total_years,omitempty" validate:"omitempty,gt=0"`
 	PartTimePeriods []PartTimePeriod  `yaml:"part_time_periods,omitempty"`
 	MilitaryService *MilitaryService  `yaml:"military_service,omitempty"`
 	UnusedSickLeave float64           `yaml:"unused_sick_leave,omitempty" validate:"omitempty,gte=0"`
@@ -55,7 +53,7 @@ type MilitaryService struct {
 
 // RetirementInfo contains retirement planning details
 type RetirementInfo struct {
-	TargetAge       int    `yaml:"target_age" validate:"required,min=50,max=70"`
+	TargetRetirementDate time.Time `yaml:"target_retirement_date" validate:"required"`
 	SurvivorBenefit string `yaml:"survivor_benefit" validate:"required,oneof=full partial none"`
 	EarlyRetirement *EarlyRetirementInfo `yaml:"early_retirement,omitempty"`
 }
