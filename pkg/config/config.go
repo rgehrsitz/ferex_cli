@@ -5,9 +5,10 @@ import (
 	"os"
 	"time"
 
+	"rgehrsitz/ferex_cli/internal/models"
+
 	"github.com/go-playground/validator/v10"
 	"gopkg.in/yaml.v3"
-	"rgehrsitz/ferex_cli/internal/models"
 )
 
 var validate *validator.Validate
@@ -84,12 +85,9 @@ func GenerateTemplate(templateType string) (*models.Config, error) {
 
 // fillCalculatedFields fills in calculated fields that may be missing
 func fillCalculatedFields(config *models.Config) error {
-	// Calculate total years of service if not provided
-	if config.Employment.CreditableService.TotalYears == 0 {
-		// Calculate from hire date to target retirement date
-		serviceYears := calculateServiceYears(config.Employment.HireDate, config.Retirement.TargetRetirementDate)
-		config.Employment.CreditableService.TotalYears = serviceYears
-	}
+	// Always calculate total years of service from hire date to target retirement date
+	serviceYears := calculateServiceYears(config.Employment.HireDate, config.Retirement.TargetRetirementDate)
+	config.Employment.CreditableService.TotalYears = serviceYears
 
 	// Set default TSP growth rate if not provided
 	if config.TSP.GrowthRate == 0 {
@@ -110,6 +108,7 @@ func fillCalculatedFields(config *models.Config) error {
 }
 
 // validateBusinessRules validates business logic rules
+// Optional fields (like early_retirement) may be omitted from the config YAML.
 func validateBusinessRules(config *models.Config) error {
 	// Check retirement age eligibility
 	if config.Personal.RetirementSystem == "FERS" {
@@ -124,9 +123,15 @@ func validateBusinessRules(config *models.Config) error {
 		if config.TSP.WithdrawalAmount <= 0 {
 			return fmt.Errorf("fixed_amount strategy requires withdrawal_amount > 0")
 		}
+		if config.TSP.WithdrawalRate > 0 {
+			return fmt.Errorf("withdrawal_rate should be zero for fixed_amount strategy")
+		}
 	case "percentage":
 		if config.TSP.WithdrawalRate <= 0 || config.TSP.WithdrawalRate > 0.20 {
 			return fmt.Errorf("percentage strategy requires withdrawal_rate between 0 and 0.20 (20%%)")
+		}
+		if config.TSP.WithdrawalAmount > 0 {
+			return fmt.Errorf("withdrawal_amount should be zero for percentage strategy")
 		}
 	}
 

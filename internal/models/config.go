@@ -31,8 +31,9 @@ type EmploymentInfo struct {
 }
 
 // CreditableService represents service time calculations
+// total_years is calculated automatically from hire_date, target_retirement_date, and other periods.
 type CreditableService struct {
-	TotalYears      float64           `yaml:"total_years,omitempty" validate:"omitempty,gt=0"`
+	TotalYears      float64           `yaml:"total_years,omitempty" validate:"omitempty,gt=0"` // Derived, do not supply in YAML
 	PartTimePeriods []PartTimePeriod  `yaml:"part_time_periods,omitempty"`
 	MilitaryService *MilitaryService  `yaml:"military_service,omitempty"`
 	UnusedSickLeave float64           `yaml:"unused_sick_leave,omitempty" validate:"omitempty,gte=0"`
@@ -59,18 +60,20 @@ type RetirementInfo struct {
 }
 
 // EarlyRetirementInfo contains early retirement options
+// This section is optional and may be omitted if not applicable.
 type EarlyRetirementInfo struct {
 	Type         string `yaml:"type" validate:"required,oneof=MRA+10 VERA DSR"`
 	PostponedStart bool `yaml:"postponed_start,omitempty"`
 }
 
 // TSPInfo contains Thrift Savings Plan information
+// Only one of WithdrawalAmount or WithdrawalRate should be non-zero, based on WithdrawalStrategy.
 type TSPInfo struct {
 	TraditionalBalance  float64 `yaml:"traditional_balance" validate:"required,gte=0"`
 	RothBalance         float64 `yaml:"roth_balance" validate:"required,gte=0"`
 	WithdrawalStrategy  string  `yaml:"withdrawal_strategy" validate:"required,oneof=fixed_amount life_expectancy lump_sum percentage"`
-	WithdrawalAmount    float64 `yaml:"withdrawal_amount,omitempty" validate:"omitempty,gt=0"`
-	WithdrawalRate      float64 `yaml:"withdrawal_rate,omitempty" validate:"omitempty,gt=0,lte=0.20"`
+	WithdrawalAmount    float64 `yaml:"withdrawal_amount" validate:"gte=0"` // Used if strategy is fixed_amount
+	WithdrawalRate      float64 `yaml:"withdrawal_rate" validate:"gte=0,lte=0.20"` // Used if strategy is percentage
 	GrowthRate          float64 `yaml:"growth_rate,omitempty" validate:"omitempty,gte=0,lte=0.15"`
 }
 

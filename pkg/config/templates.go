@@ -1,8 +1,8 @@
 package config
 
 import (
-	"time"
 	"rgehrsitz/ferex_cli/internal/models"
+	"time"
 )
 
 // generateBasicTemplate creates a basic FERS employee template
@@ -72,7 +72,7 @@ func generateAdvancedTemplate() *models.Config {
 		Years:      4,
 		BoughtBack: true,
 	}
-	
+
 	partTimePeriods := []models.PartTimePeriod{
 		{
 			StartDate:    time.Date(2010, 1, 1, 0, 0, 0, 0, time.UTC),
@@ -80,17 +80,20 @@ func generateAdvancedTemplate() *models.Config {
 			HoursPerWeek: 32,
 		},
 	}
-	
-	earlyRetirement := &models.EarlyRetirementInfo{
-		Type:           "MRA+10",
-		PostponedStart: false,
-	}
-	
+
+	// EarlyRetirement is optional; set to nil if not applicable
+	var earlyRetirement *models.EarlyRetirementInfo = nil
+	// Uncomment below to include early retirement options
+	// earlyRetirement := &models.EarlyRetirementInfo{
+	// 	Type:           "MRA+10",
+	// 	PostponedStart: false,
+	// }
+
 	spouseBenefit := &models.SpouseBenefit{
 		EstimatedPIA: 2200,
 		ClaimingAge:  67,
 	}
-	
+
 	return &models.Config{
 		Personal: models.PersonalInfo{
 			Name:             "Jane Smith",
@@ -101,7 +104,7 @@ func generateAdvancedTemplate() *models.Config {
 			HireDate:      time.Date(1995, 6, 1, 0, 0, 0, 0, time.UTC),
 			High3Salary:   92000,
 			CreditableService: models.CreditableService{
-				TotalYears:      29,
+				// TotalYears is derived/calculated; do not set here
 				PartTimePeriods: partTimePeriods,
 				MilitaryService: militaryService,
 				UnusedSickLeave: 240, // 30 days
@@ -110,13 +113,14 @@ func generateAdvancedTemplate() *models.Config {
 		Retirement: models.RetirementInfo{
 			TargetRetirementDate: time.Date(2021, 7, 22, 0, 0, 0, 0, time.UTC), // Age 56 (early retirement)
 			SurvivorBenefit: "partial",
-			EarlyRetirement: earlyRetirement,
+			EarlyRetirement: earlyRetirement, // Optional; set to nil if not needed
 		},
 		TSP: models.TSPInfo{
 			TraditionalBalance: 550000,
 			RothBalance:        200000,
-			WithdrawalStrategy: "fixed_amount",
-			WithdrawalAmount:   30000,
+			WithdrawalStrategy: "fixed_amount", // options: fixed_amount, percentage, life_expectancy, lump_sum
+			WithdrawalAmount:   30000,           // set if strategy is fixed_amount, else 0
+			WithdrawalRate:     0,               // set if strategy is percentage, else 0
 			GrowthRate:         0.08,
 		},
 		SocialSecurity: models.SocialSecurityInfo{
