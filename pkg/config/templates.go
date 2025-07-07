@@ -31,22 +31,39 @@ func generateBasicTemplate() *models.Config {
 			EarlyRetirement: nil,
 		},
 		TSP: models.TSPInfo{
-			CurrentBalance:     500000,
 			TraditionalBalance: 400000,
 			RothBalance:        100000,
-			WithdrawalStrategy: "life_expectancy",
-			WithdrawalAmount:   0,
+			WithdrawalStrategy: "percentage",
+			WithdrawalRate:     0.04,
 			GrowthRate:         0.07,
 		},
 		SocialSecurity: models.SocialSecurityInfo{
 			EstimatedPIA: 2800,
 			ClaimingAge:  67,
 			SpouseBenefit: nil,
+			MonthlyEstimates: map[int]float64{
+				62: 2240, // Example: reduced benefit at 62
+				67: 2800, // Full benefit at FRA
+				70: 3472, // Delayed retirement credit at 70
+			},
+		},
+		HealthInsurance: models.HealthInsuranceInfo{
+			RetirementPremium: 4800,
+			PremiumCOLA:       0.03,
+			Plan:              "Blue Cross Standard",
+		},
+		TaxInfo: models.TaxInfo{
+			State:            "VA",
+			StateTaxRate:     0.05,
+			PensionTaxExempt: false,
+			SSTaxExempt:      false,
+			FilingStatus:     "mfj",
 		},
 		Output: models.OutputOptions{
 			Format:     "table",
 			Verbose:    false,
 			OutputFile: "",
+			Monthly:    false,
 		},
 	}
 }
@@ -100,7 +117,6 @@ func generateAdvancedTemplate() *models.Config {
 			EarlyRetirement: earlyRetirement,
 		},
 		TSP: models.TSPInfo{
-			CurrentBalance:     750000,
 			TraditionalBalance: 550000,
 			RothBalance:        200000,
 			WithdrawalStrategy: "fixed_amount",
@@ -111,11 +127,29 @@ func generateAdvancedTemplate() *models.Config {
 			EstimatedPIA: 3200,
 			ClaimingAge:  67,
 			SpouseBenefit: spouseBenefit,
+			MonthlyEstimates: map[int]float64{
+				62: 2560,
+				67: 3200,
+				70: 3968,
+			},
+		},
+		HealthInsurance: models.HealthInsuranceInfo{
+			RetirementPremium: 6000,
+			PremiumCOLA:       0.035,
+			Plan:              "Blue Cross High Option",
+		},
+		TaxInfo: models.TaxInfo{
+			State:            "FL", // No state income tax
+			StateTaxRate:     0.0,
+			PensionTaxExempt: false,
+			SSTaxExempt:      false,
+			FilingStatus:     "mfj",
 		},
 		Output: models.OutputOptions{
 			Format:     "csv",
 			Verbose:    true,
 			OutputFile: "retirement-analysis.csv",
+			Monthly:    false,
 		},
 	}
 }
@@ -149,22 +183,38 @@ func generateCSRSTemplate() *models.Config {
 			EarlyRetirement: nil,
 		},
 		TSP: models.TSPInfo{
-			CurrentBalance:     300000, // CSRS employees typically have less TSP
-			TraditionalBalance: 250000,
+			TraditionalBalance: 250000, // CSRS employees typically have less TSP
 			RothBalance:        50000,
 			WithdrawalStrategy: "life_expectancy",
-			WithdrawalAmount:   0,
 			GrowthRate:         0.06,
 		},
 		SocialSecurity: models.SocialSecurityInfo{
 			EstimatedPIA: 1800, // Typically lower for CSRS due to limited SS-covered employment
 			ClaimingAge:  67,
 			SpouseBenefit: nil,
+			MonthlyEstimates: map[int]float64{
+				62: 1440,
+				67: 1800,
+				70: 2232,
+			},
+		},
+		HealthInsurance: models.HealthInsuranceInfo{
+			RetirementPremium: 5200,
+			PremiumCOLA:       0.03,
+			Plan:              "FEHB Standard",
+		},
+		TaxInfo: models.TaxInfo{
+			State:            "MD",
+			StateTaxRate:     0.04,
+			PensionTaxExempt: true,  // MD exempts some pension income
+			SSTaxExempt:      false,
+			FilingStatus:     "mfj",
 		},
 		Output: models.OutputOptions{
 			Format:     "table",
 			Verbose:    false,
 			OutputFile: "",
+			Monthly:    false,
 		},
 	}
 }

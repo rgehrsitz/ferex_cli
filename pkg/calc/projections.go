@@ -14,8 +14,8 @@ func (c *Calculator) generateAnnualProjections(pension models.PensionCalculation
 	startAge := c.config.Retirement.TargetAge
 	endAge := 95 // Project to age 95
 	
-	// Initialize TSP balance
-	tspBalance := c.config.TSP.CurrentBalance
+	// Initialize TSP balance (traditional + roth)
+	tspBalance := c.config.TSP.TraditionalBalance + c.config.TSP.RothBalance
 	
 	for age := startAge; age <= endAge; age++ {
 		year := time.Now().Year() + (age - c.config.Personal.CurrentAge)
@@ -146,6 +146,13 @@ func (c *Calculator) calculateTSPWithdrawal(balance float64, age int) float64 {
 		lifeExpectancy := c.calculateLifeExpectancy(age)
 		return balance / lifeExpectancy
 		
+	case "percentage":
+		// Percentage of balance (e.g., 4% rule)
+		if c.config.TSP.WithdrawalRate > 0 {
+			return balance * c.config.TSP.WithdrawalRate
+		}
+		return balance * 0.04 // Default 4% rule
+		
 	case "lump_sum":
 		// Take everything at retirement
 		if age == c.config.Retirement.TargetAge {
@@ -253,17 +260,76 @@ func (c *Calculator) calculateTaxBrackets(income float64) float64 {
 	return tax
 }
 
-// calculateStateTax calculates state income tax (simplified)
+// calculateStateTax calculates state income tax
 func (c *Calculator) calculateStateTax(projection models.AnnualProjection, age int) float64 {
-	// Simplified - assume 5% state tax rate
-	// In reality, this would vary greatly by state
-	return projection.GrossIncome * 0.05
+	// Use configured state tax rate if available
+	if c.config.TaxInfo.StateTaxRate > 0 {
+		taxableIncome := projection.GrossIncome
+		
+		// Apply exemptions for pension if configured
+		if c.config.TaxInfo.PensionTaxExempt {
+			taxableIncome -= projection.PensionIncome
+		}
+		
+		// Apply exemptions for Social Security if configured
+		if c.config.TaxInfo.SSTaxExempt {
+			taxableIncome -= projection.SocialSecurityIncome
+		}
+		
+		if taxableIncome <= 0 {
+			return 0
+		}
+		
+		return taxableIncome * c.config.TaxInfo.StateTaxRate
+	}
+	
+	// Default state tax estimate based on known state patterns
+	stateName := c.config.TaxInfo.State
+	switch stateName {
+	case "FL", "TX", "NV", "AK", "SD", "WY", "WA", "TN", "NH":
+		return 0 // No state income tax
+	case "PA":
+		// PA taxes TSP but not pension
+		return projection.TSPWithdrawal * 0.0307
+	case "IL":
+		// IL has flat 4.95% tax but exempts retirement income over 65
+		if age >= 65 {
+			return projection.TSPWithdrawal * 0.0495
+		}
+		return projection.GrossIncome * 0.0495
+	default:
+		// Default 5% state tax rate for unknown states
+		return projection.GrossIncome * 0.05
+	}
 }
 
 // calculateHealthInsurance calculates health insurance premiums
 func (c *Calculator) calculateHealthInsurance(age int) float64 {
-	// Simplified FEHB premium estimate
-	return 4800.0 // $400/month
+	startAge := c.config.Retirement.TargetAge
+	yearsRetired := age - startAge
+	
+	// Use configured premiums if available
+	if c.config.HealthInsurance.RetirementPremium > 0 {
+		basePremium := c.config.HealthInsurance.RetirementPremium
+		
+		// Apply COLA if specified
+		if c.config.HealthInsurance.PremiumCOLA > 0 && yearsRetired > 0 {
+			colaRate := c.config.HealthInsurance.PremiumCOLA
+			return basePremium * math.Pow(1+colaRate, float64(yearsRetired))
+		}
+		
+		return basePremium
+	}
+	
+	// Default FEHB premium estimate
+	basePremium := 4800.0 // $400/month
+	
+	// Apply default 3% annual increase
+	if yearsRetired > 0 {
+		return basePremium * math.Pow(1.03, float64(yearsRetired))
+	}
+	
+	return basePremium
 }
 
 // calculateLifeInsurance calculates life insurance premiums

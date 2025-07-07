@@ -33,11 +33,9 @@ func createTestConfig() *models.Config {
 			EarlyRetirement: nil,
 		},
 		TSP: models.TSPInfo{
-			CurrentBalance:     500000,
 			TraditionalBalance: 400000,
 			RothBalance:        100000,
 			WithdrawalStrategy: "life_expectancy",
-			WithdrawalAmount:   0,
 			GrowthRate:         0.07,
 		},
 		SocialSecurity: models.SocialSecurityInfo{

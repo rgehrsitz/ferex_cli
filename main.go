@@ -14,6 +14,7 @@ var (
 	cfgFile string
 	verbose bool
 	format  string
+	monthly bool
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -104,6 +105,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.ferex.yaml)")
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose output")
 	rootCmd.PersistentFlags().StringVarP(&format, "format", "f", "table", "output format (table, json, csv, yaml)")
+	rootCmd.PersistentFlags().BoolVarP(&monthly, "monthly", "m", false, "display monthly amounts for budgeting")
 
 	// Add subcommands
 	rootCmd.AddCommand(calcCmd)
@@ -148,7 +150,7 @@ func runCalc(cmd *cobra.Command, args []string) error {
 	
 	// Output results
 	outputFile, _ := cmd.Flags().GetString("output")
-	outputter := output.NewOutputter(format, outputFile, verbose)
+	outputter := output.NewOutputter(format, outputFile, verbose, monthly)
 	
 	return outputter.OutputResults(results)
 }
@@ -161,7 +163,7 @@ func runInit(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to generate template: %w", err)
 	}
 	
-	outputter := output.NewOutputter("yaml", "", false)
+	outputter := output.NewOutputter("yaml", "", false, false)
 	return outputter.OutputConfig(cfg)
 }
 
@@ -190,7 +192,7 @@ func runCompare(cmd *cobra.Command, args []string) error {
 	}
 	
 	// Output results
-	outputter := output.NewOutputter(format, outputFile, verbose)
+	outputter := output.NewOutputter(format, outputFile, verbose, monthly)
 	return outputter.OutputComparison(comparison)
 }
 

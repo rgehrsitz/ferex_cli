@@ -21,8 +21,9 @@ func TestGenerateBasicTemplate(t *testing.T) {
 		t.Errorf("Expected 25 years service, got %.1f", cfg.Employment.CreditableService.TotalYears)
 	}
 	
-	if cfg.TSP.CurrentBalance != 500000 {
-		t.Errorf("Expected TSP balance 500000, got %.2f", cfg.TSP.CurrentBalance)
+	totalBalance := cfg.TSP.TraditionalBalance + cfg.TSP.RothBalance
+	if totalBalance != 500000 {
+		t.Errorf("Expected total TSP balance 500000, got %.2f", totalBalance)
 	}
 }
 
@@ -67,15 +68,17 @@ func TestValidateBusinessRules(t *testing.T) {
 		t.Errorf("Valid config failed validation: %v", err)
 	}
 	
-	// Test TSP balance inconsistency
-	cfg.TSP.CurrentBalance = 600000 // Doesn't match traditional + roth
+	// Test invalid withdrawal strategy
+	cfg.TSP.WithdrawalStrategy = "fixed_amount"
+	cfg.TSP.WithdrawalAmount = 0 // Should be > 0 for fixed_amount
 	err = validateBusinessRules(cfg)
 	if err == nil {
-		t.Error("Expected validation error for TSP balance inconsistency")
+		t.Error("Expected validation error for invalid withdrawal strategy")
 	}
 	
-	// Fix TSP balance
-	cfg.TSP.CurrentBalance = cfg.TSP.TraditionalBalance + cfg.TSP.RothBalance
+	// Fix withdrawal strategy
+	cfg.TSP.WithdrawalStrategy = "percentage"
+	cfg.TSP.WithdrawalRate = 0.04
 	
 	// Test future hire date
 	cfg.Employment.HireDate = time.Now().Add(24 * time.Hour)
@@ -139,7 +142,6 @@ func TestFillCalculatedFields(t *testing.T) {
 	cfg.Personal.CurrentAge = 0
 	cfg.Employment.High3Salary = 0
 	cfg.TSP.GrowthRate = 0
-	cfg.TSP.CurrentBalance = 0
 	
 	err := fillCalculatedFields(cfg)
 	if err != nil {
@@ -159,8 +161,10 @@ func TestFillCalculatedFields(t *testing.T) {
 		t.Error("TSP growth rate was not set to default 7%")
 	}
 	
-	if cfg.TSP.CurrentBalance == 0 {
-		t.Error("TSP current balance was not calculated")
+	// TSP balance is now calculated as traditional + roth
+	totalBalance := cfg.TSP.TraditionalBalance + cfg.TSP.RothBalance
+	if totalBalance == 0 {
+		t.Error("TSP total balance should not be zero")
 	}
 }
 

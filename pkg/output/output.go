@@ -16,14 +16,16 @@ type Outputter struct {
 	format     string
 	outputFile string
 	verbose    bool
+	monthly    bool
 }
 
 // NewOutputter creates a new outputter
-func NewOutputter(format, outputFile string, verbose bool) *Outputter {
+func NewOutputter(format, outputFile string, verbose, monthly bool) *Outputter {
 	return &Outputter{
 		format:     format,
 		outputFile: outputFile,
 		verbose:    verbose,
+		monthly:    monthly,
 	}
 }
 
@@ -196,8 +198,19 @@ func (o *Outputter) formatSummaryTable(summary models.RetirementSummary) string 
 	output := "Retirement Planning Summary\n"
 	output += "===========================\n\n"
 	
-	output += fmt.Sprintf("Monthly Pension:           $%.2f\n", summary.MonthlyPension)
-	output += fmt.Sprintf("Annual Pension:            $%.2f\n", summary.AnnualPension)
+	if o.monthly {
+		output += fmt.Sprintf("Monthly Pension:           $%.2f\n", summary.MonthlyPension)
+		output += fmt.Sprintf("Monthly Social Security:   $%.2f (starting age %d)\n", 
+			summary.MonthlySocialSecurity, summary.SocialSecurityStartAge)
+		if summary.FERSSupplement > 0 {
+			output += fmt.Sprintf("Monthly FERS Supplement:   $%.2f (until age %d)\n", 
+				summary.FERSSupplement, summary.SupplementEndAge)
+		}
+		output += fmt.Sprintf("First Month Income:        $%.2f\n", summary.FirstYearIncome/12)
+	} else {
+		output += fmt.Sprintf("Monthly Pension:           $%.2f\n", summary.MonthlyPension)
+		output += fmt.Sprintf("Annual Pension:            $%.2f\n", summary.AnnualPension)
+	}
 	
 	if summary.PensionReductionPct > 0 {
 		output += fmt.Sprintf("Pension Reduction:         %.1f%%\n", summary.PensionReductionPct)

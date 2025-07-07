@@ -99,10 +99,15 @@ func fillCalculatedFields(config *models.Config) error {
 	if config.TSP.GrowthRate == 0 {
 		config.TSP.GrowthRate = 0.07 // 7% default
 	}
-
-	// Validate TSP balance consistency
-	if config.TSP.CurrentBalance == 0 {
-		config.TSP.CurrentBalance = config.TSP.TraditionalBalance + config.TSP.RothBalance
+	
+	// Set default withdrawal rate for percentage strategy
+	if config.TSP.WithdrawalStrategy == "percentage" && config.TSP.WithdrawalRate == 0 {
+		config.TSP.WithdrawalRate = 0.04 // 4% default
+	}
+	
+	// Set default health insurance COLA
+	if config.HealthInsurance.PremiumCOLA == 0 && config.HealthInsurance.RetirementPremium > 0 {
+		config.HealthInsurance.PremiumCOLA = 0.03 // 3% default
 	}
 
 	return nil
@@ -117,10 +122,16 @@ func validateBusinessRules(config *models.Config) error {
 		}
 	}
 
-	// Check TSP balance consistency
-	if config.TSP.CurrentBalance != config.TSP.TraditionalBalance+config.TSP.RothBalance {
-		return fmt.Errorf("TSP balance inconsistency: current_balance (%.2f) != traditional (%.2f) + roth (%.2f)", 
-			config.TSP.CurrentBalance, config.TSP.TraditionalBalance, config.TSP.RothBalance)
+	// Validate TSP withdrawal strategy configuration
+	switch config.TSP.WithdrawalStrategy {
+	case "fixed_amount":
+		if config.TSP.WithdrawalAmount <= 0 {
+			return fmt.Errorf("fixed_amount strategy requires withdrawal_amount > 0")
+		}
+	case "percentage":
+		if config.TSP.WithdrawalRate <= 0 || config.TSP.WithdrawalRate > 0.20 {
+			return fmt.Errorf("percentage strategy requires withdrawal_rate between 0 and 0.20 (20%%)")
+		}
 	}
 
 	// Check dates are logical

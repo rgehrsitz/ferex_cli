@@ -229,9 +229,24 @@ func (c *Calculator) calculateSocialSecurity() models.SocialSecurityCalculation 
 	pia := c.config.SocialSecurity.EstimatedPIA
 	claimingAge := c.config.SocialSecurity.ClaimingAge
 	
-	// Apply claiming age adjustment
-	adjustment := c.calculateSSClaimingAdjustment(claimingAge)
-	monthlyBenefit := pia * adjustment
+	var monthlyBenefit float64
+	var adjustment float64
+	
+	// Use monthly estimates if available
+	if c.config.SocialSecurity.MonthlyEstimates != nil {
+		if estimate, exists := c.config.SocialSecurity.MonthlyEstimates[claimingAge]; exists {
+			monthlyBenefit = estimate
+			adjustment = estimate / pia // Calculate effective adjustment
+		} else {
+			// Fall back to calculated adjustment
+			adjustment = c.calculateSSClaimingAdjustment(claimingAge)
+			monthlyBenefit = pia * adjustment
+		}
+	} else {
+		// Use calculated adjustment
+		adjustment = c.calculateSSClaimingAdjustment(claimingAge)
+		monthlyBenefit = pia * adjustment
+	}
 	
 	return models.SocialSecurityCalculation{
 		PIA:            pia,

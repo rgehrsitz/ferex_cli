@@ -17,7 +17,7 @@ func (c *Calculator) createSummary(pension models.PensionCalculation, ss models.
 		NetMonthlyPension:     pension.FinalPension / 12,
 		MonthlySocialSecurity: ss.MonthlyBenefit,
 		SocialSecurityStartAge: ss.ClaimingAge,
-		TSPStartingBalance:    c.config.TSP.CurrentBalance,
+		TSPStartingBalance:    c.config.TSP.TraditionalBalance + c.config.TSP.RothBalance,
 	}
 
 	// FERS Supplement info
@@ -91,10 +91,7 @@ func (c *Calculator) generateWarnings() []string {
 		warnings = append(warnings, "Retirement eligibility requirements may not be met")
 	}
 
-	// Check TSP balance consistency
-	if c.config.TSP.CurrentBalance != c.config.TSP.TraditionalBalance+c.config.TSP.RothBalance {
-		warnings = append(warnings, "TSP balance components don't add up to total balance")
-	}
+	// Note: TSP balance is now calculated as traditional + roth
 
 	// Check if High-3 seems low
 	if c.config.Employment.High3Salary < c.config.Employment.CurrentSalary*0.9 {
